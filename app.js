@@ -21,7 +21,7 @@ async function main() {
     io.emit('online-count', onlineCount)
 
     var pngBuffer = await pixelData.getBufferAsync(Jimp.MIME_PNG)
-    var lastDrawTime = Date.now()
+    var lastDrawTime = 0
     socket.emit('initial-pixel-data', pngBuffer)
   
     socket.on('draw-dot', async ({row, col, color}) => {
@@ -47,6 +47,10 @@ async function main() {
           console.log('save pixel data success!')
         }
       })
+    })
+
+    socket.on('chat-msg', msg => {
+      io.emit('chat-msg', msg)
     })
   
     socket.on('disconnect', () => {
