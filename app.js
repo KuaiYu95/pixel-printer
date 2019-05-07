@@ -12,9 +12,21 @@ const server = app.listen(port, () => {
 
 const io = SocketIO(server)
 
+app.use(express.static(path.join(__dirname, '../fe/build')))
+
 async function main() {
   const pixelData = await Jimp.read('./pixelData.png')
   let onlineCount = 0
+
+  let dotOperations = [] 
+
+  setInterval(() => {
+    if(dotOperations.length) {
+      io.emit('update-dots', dotOperations)
+      dotOperations.length = 0
+    }
+  }, 100)
+
   io.on('connection', async (socket) => {
     onlineCount++
 
@@ -26,7 +38,7 @@ async function main() {
   
     socket.on('draw-dot', async ({row, col, color}) => {
       var now = Date.now()
-      if(now - lastDrawTime < 3000) {
+      if(now - lastDrawTime < 500) {
         return
       }
       lastDrawTime = now
@@ -34,19 +46,20 @@ async function main() {
   
       pixelData.setPixelColor(hexColor, col, row)
       // pixelData[row][col] = color
+
+      dotOperations.push({row, col, color})
   
-      io.emit('update-dot', {row, col, color})
+      // io.emit('update-dot', {row, col, color})
       // socket.broadcast.emit('update-dot', {row, col, color})
       // socket.emit('update-dot', {row, col, color})
-  
-      var buf = await pixelData.getBufferAsync(Jimp.MIME_PNG)
-      fs.writeFile('./pixelData.png', buf, (err) => {
-        if (err) {
-          console.log(err)
-        } else {
-          console.log('save pixel data success!')
-        }
-      })
+
+      try {
+        var buf = await pixelData.getBufferAsync(Jimp.MIME_PNG)
+        await fs.promises.writeFile('./pixelData.png', buf)
+        console.log('save pixel data success!')
+      } catch(e) {
+        console.log(e)
+      }
     })
 
     socket.on('chat-msg', msg => {
