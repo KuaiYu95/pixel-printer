@@ -15,7 +15,7 @@ const io = SocketIO(server)
 app.use(express.static(path.join(__dirname, '../fe/build')))
 
 async function main() {
-  const pixelData = await Jimp.read('./pixelData.png')
+  const pixelData = await Jimp.read('./pixelData5000.png')
   let onlineCount = 0
 
   let dotOperations = [] 
